@@ -1,51 +1,45 @@
-import requests
-from bs4 import BeautifulSoup
+import pandas as pd
 from pathlib import Path
 
 START_YEAR = 2012
 END_YEAR = 2026
 
-all_results = []
+results = []
 
 for year in range(END_YEAR, START_YEAR - 1, -1):
 
     url = f"https://www.irishlottery.com/daily-million-archive-{year}"
 
-    print(f"Fetching {url}")
+    print(f"Reading {url}")
 
-    response = requests.get(url, timeout=30)
+    try:
 
-    soup = BeautifulSoup(response.text, "html.parser")
+        tables = pd.read_html(url)
 
-    rows = soup.select("table tr")
+    except Exception as e:
 
-    for row in rows:
+        print(f"Failed {year}: {e}")
 
-        cols = row.find_all("td")
+        continue
 
-        if len(cols) != 2:
+    for table in tables:
+
+        cols = [str(c).lower() for c in table.columns]
+
+        if not any("date" in c for c in cols):
             continue
 
-        date_text = cols[0].get_text(" ", strip=True)
+        for _, row in table.iterrows():
 
-        numbers = cols[1].find_all("li")
+            line = " | ".join(str(x) for x in row.tolist())
 
-        nums = [n.get_text(strip=True) for n in numbers]
+            if line.strip():
 
-        if len(nums) < 7:
-            continue
+                results.append(line)
 
-        main = " ".join(nums[:6])
-
-        bonus = nums[6]
-
-        line = f"{date_text}: {main} Bonus {bonus}"
-
-        all_results.append(line)
-
-html_lines = "\n".join(
-    f'<div class="draw">{x}</div>'
-    for x in all_results
+html_results = "\n".join(
+    f'<div class="draw">{r}</div>'
+    for r in results
 )
 
 html = f"""
@@ -60,20 +54,20 @@ html = f"""
 <style>
 
 body {{
-    background: #000;
-    color: #00ff66;
-    font-family: monospace;
-    padding: 20px;
+    background:black;
+    color:#00ff66;
+    font-family:Courier New, monospace;
+    padding:20px;
 }}
 
 h1 {{
-    color: #ffcc66;
+    color:#ffcc66;
 }}
 
 .draw {{
-    padding: 2px 0;
-    border-bottom: 1px solid #222;
-    white-space: pre-wrap;
+    padding:3px 0;
+    border-bottom:1px solid #222;
+    white-space:pre-wrap;
 }}
 
 </style>
@@ -84,7 +78,7 @@ h1 {{
 
 <h1>Irish Daily Million Results Archive (2012–2026)</h1>
 
-{html_lines}
+{html_results}
 
 </body>
 </html>
@@ -93,8 +87,8 @@ h1 {{
 Path("index.html").write_text(html, encoding="utf-8")
 
 Path("irish_daily_million_archive.txt").write_text(
-    "\n".join(all_results),
+    "\n".join(results),
     encoding="utf-8"
 )
 
-print(f"Generated {len(all_results)} results.")
+print(f"Generated {len(results)} rows.")

@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4
+          pip install pandas lxml html5lib requests beautifulsoup4
 
       - name: Run scraper
         run: |

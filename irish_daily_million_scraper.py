@@ -11,6 +11,8 @@ headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
+game_number = 1
+
 print("Building Irish Daily Million archive...")
 
 for year in range(END_YEAR, START_YEAR - 1, -1):
@@ -72,13 +74,18 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
 
                 bonus = numbers[6]
 
+                game_id = str(game_number).zfill(4)
+
                 formatted = (
+                    f"{game_id} | "
                     f"{date_text}: "
                     f"{main_numbers} "
                     f"({bonus})"
                 )
 
                 results.append(formatted)
+
+                game_number += 1
 
     except Exception as e:
 

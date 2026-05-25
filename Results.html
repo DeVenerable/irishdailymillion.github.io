@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Irish Daily Million Results</title>
+
+<style>
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:14px;
+    margin:20px;
+    background:#fff;
+    color:#000;
+}
+
+h1{
+    font-size:28px;
+    margin-bottom:20px;
+}
+
+#search{
+    width:320px;
+    padding:6px;
+    margin-bottom:20px;
+    font-size:14px;
+}
+
+.draw{
+    margin-bottom:12px;
+}
+
+.date{
+    font-weight:bold;
+}
+
+.numbers{
+    margin-left:20px;
+}
+
+.bonus{
+    color:red;
+    font-weight:bold;
+}
+
+.error{
+    color:red;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Irish National Lottery - Daily Million Results</h1>
+
+<input
+    type="text"
+    id="search"
+    placeholder="Search..."
+    onkeyup="filterDraws()"
+>
+
+<div id="results">
+Loading full archive...
+</div>
+
+<script>
+
+const DATA_URL =
+'https://lottery-files.s3.eu-west-1.amazonaws.com/all-results.json';
+
+let allDraws = [];
+
+async function loadData(){
+
+    const results =
+        document.getElementById('results');
+
+    try{
+
+        const response = await fetch(DATA_URL);
+
+        if(!response.ok){
+
+            throw new Error(
+                'Failed to download dataset'
+            );
+        }
+
+        const data = await response.json();
+
+        /*
+        FILTER DAILY MILLION
+        */
+
+        allDraws = data.filter(draw => {
+
+            const game =
+                (draw.game || '')
+                .toLowerCase();
+
+            return game.includes('daily million');
+
+        }).map(draw => {
+
+            return {
+
+                date: formatDate(draw.date),
+
+                nums:
+                    Array.isArray(draw.numbers)
+                    ? draw.numbers.join(' ')
+                    : '',
+
+                bonus:
+                    draw.bonus || ''
+
+            };
+
+        });
+
+        /*
+        NEWEST FIRST
+        */
+
+        allDraws.reverse();
+
+        render(allDraws);
+
+    }
+    catch(err){
+
+        results.innerHTML = `
+
+            <div class="error">
+
+                Could not load archive.<br><br>
+
+                This usually happens because:
+
+                <ul>
+                    <li>You opened the HTML directly from your computer</li>
+                    <li>Your browser blocks local fetch requests</li>
+                    <li>The dataset server rejected the request</li>
+                </ul>
+
+                QUICK FIX:
+
+                <br><br>
+
+                Run a local web server.
+
+                <br><br>
+
+                Example with Python:
+
+                <pre>
+python -m http.server
+                </pre>
+
+                Then open:
+
+                <pre>
+http://localhost:8000
+                </pre>
+
+            </div>
+
+        `;
+
+        console.error(err);
+    }
+}
+
+function formatDate(dateStr){
+
+    const d = new Date(dateStr);
+
+    if(isNaN(d)) return dateStr;
+
+    const day =
+        String(d.getDate()).padStart(2,'0');
+
+    const month =
+        String(d.getMonth()+1).padStart(2,'0');
+
+    const year =
+        d.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+
+function render(draws){
+
+    const results =
+        document.getElementById('results');
+
+    results.innerHTML = '';
+
+    draws.forEach(draw => {
+
+        results.innerHTML += `
+
+            <div class="draw">
+
+                <div class="date">
+                    ${draw.date}
+                </div>
+
+                <div class="numbers">
+
+                    ${draw.nums}
+
+                    +
+
+                    <span class="bonus">
+                        ${draw.bonus}
+                    </span>
+
+                </div>
+
+            </div>
+
+        `;
+    });
+}
+
+function filterDraws(){
+
+    const q =
+        document
+        .getElementById('search')
+        .value
+        .toLowerCase();
+
+    const filtered = allDraws.filter(draw => {
+
+        return (
+
+            draw.date.toLowerCase().includes(q) ||
+
+            draw.nums.toLowerCase().includes(q) ||
+
+            String(draw.bonus)
+            .toLowerCase()
+            .includes(q)
+
+        );
+
+    });
+
+    render(filtered);
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>

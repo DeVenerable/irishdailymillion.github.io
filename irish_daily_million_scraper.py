@@ -11,7 +11,7 @@ headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
-print("Building archive...")
+print("Building Irish Daily Million archive...")
 
 for year in range(END_YEAR, START_YEAR - 1, -1):
 
@@ -27,7 +27,10 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
             timeout=15
         )
 
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
         tables = soup.find_all("table")
 
@@ -42,9 +45,15 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
                 if len(cols) < 2:
                     continue
 
-                date_text = cols[0].get_text(" ", strip=True)
+                date_text = cols[0].get_text(
+                    " ",
+                    strip=True
+                )
 
-                draw_text = cols[1].get_text(" ", strip=True)
+                draw_text = cols[1].get_text(
+                    " ",
+                    strip=True
+                )
 
                 numbers = []
 
@@ -59,13 +68,17 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
                 if len(numbers) < 7:
                     continue
 
-                main = " ".join(numbers[:6])
+                main_numbers = " ".join(numbers[:6])
 
                 bonus = numbers[6]
 
-                line = f"{date_text}: {main} ({bonus})"
+                formatted = (
+                    f"{date_text}: "
+                    f"{main_numbers} "
+                    f"({bonus})"
+                )
 
-                results.append(line)
+                results.append(formatted)
 
     except Exception as e:
 
@@ -73,7 +86,7 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
 
 results = list(dict.fromkeys(results))
 
-html_output = "\n".join(
+html_results = "\n".join(
     f'<div class="draw">{r}</div>'
     for r in results
 )
@@ -90,24 +103,32 @@ html = f"""
 <style>
 
 body {{
-    background:#000;
-    color:#00ff66;
-    font-family:Consolas, monospace;
-    padding:20px;
-    line-height:1.5;
+    background: #000;
+    color: #00ff66;
+    font-family: Consolas, Courier New, monospace;
+    padding: 20px;
+    line-height: 1.5;
 }}
 
 h1 {{
-    color:#ffcc66;
+    color: #ffcc66;
+    margin-bottom: 25px;
 }}
 
 .draw {{
-    padding:2px 0;
-    border-bottom:1px solid #111;
+    padding: 2px 0;
+    border-bottom: 1px solid #111;
+    white-space: pre-wrap;
 }}
 
 .draw:hover {{
-    background:#111;
+    background: #111;
+}}
+
+.footer {{
+    margin-top: 30px;
+    color: #666;
+    font-size: 12px;
 }}
 
 </style>
@@ -118,7 +139,11 @@ h1 {{
 
 <h1>Irish Daily Million Results Archive (2012–2026)</h1>
 
-{html_output}
+{html_results}
+
+<div class="footer">
+Automatically updated via GitHub Actions
+</div>
 
 </body>
 </html>

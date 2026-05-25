@@ -7,7 +7,7 @@ START_YEAR = 2012
 END_YEAR = 2026
 
 output_txt = Path("irish_daily_million_archive.txt")
-output_html = Path("irish_daily_million_archive.html")
+output_html = Path("index.html")
 
 lines = []
 html_rows = []

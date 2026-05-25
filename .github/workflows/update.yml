@@ -30,15 +30,15 @@ jobs:
         run: |
           pip install requests beautifulsoup4
 
+      - name: Sync with remote
+        run: |
+          git pull origin main --rebase
+
       - name: Run scraper
         run: |
           python irish_daily_million_scraper.py
 
-      - name: Sync branch
-        run: |
-          git pull --rebase origin main
-
-      - name: Commit updated files
+      - name: Commit and push changes
         run: |
 
           git config --global user.name "github-actions"

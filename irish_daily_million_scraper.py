@@ -13,7 +13,7 @@ headers = {
 
 game_number = 1
 
-print("Building Irish Daily Million archive...")
+print("Building archive...")
 
 for year in range(END_YEAR, START_YEAR - 1, -1):
 
@@ -26,7 +26,7 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
         response = requests.get(
             url,
             headers=headers,
-            timeout=15
+            timeout=20
         )
 
         soup = BeautifulSoup(
@@ -34,58 +34,51 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
             "html.parser"
         )
 
-        tables = soup.find_all("table")
+        archive_rows = soup.select("table tbody tr")
 
-        for table in tables:
+        for row in archive_rows:
 
-            rows = table.find_all("tr")
+            tds = row.find_all("td")
 
-            for row in rows:
+            if len(tds) < 2:
+                continue
 
-                cols = row.find_all("td")
+            date_text = tds[0].get_text(
+                " ",
+                strip=True
+            )
 
-                if len(cols) < 2:
-                    continue
+            balls = row.select("li")
 
-                date_text = cols[0].get_text(
-                    " ",
-                    strip=True
-                )
+            numbers = []
 
-                draw_text = cols[1].get_text(
-                    " ",
-                    strip=True
-                )
+            for ball in balls:
 
-                numbers = []
+                num = ball.get_text(strip=True)
 
-                for item in draw_text.replace(",", " ").split():
+                if num.isdigit():
 
-                    cleaned = item.strip()
+                    numbers.append(num)
 
-                    if cleaned.isdigit():
+            if len(numbers) < 7:
+                continue
 
-                        numbers.append(cleaned)
+            main_numbers = " ".join(numbers[:6])
 
-                if len(numbers) < 7:
-                    continue
+            bonus = numbers[6]
 
-                main_numbers = " ".join(numbers[:6])
+            game_id = str(game_number).zfill(4)
 
-                bonus = numbers[6]
+            formatted = (
+                f"{game_id} | "
+                f"{date_text}: "
+                f"{main_numbers} "
+                f"({bonus})"
+            )
 
-                game_id = str(game_number).zfill(4)
+            results.append(formatted)
 
-                formatted = (
-                    f"{game_id} | "
-                    f"{date_text}: "
-                    f"{main_numbers} "
-                    f"({bonus})"
-                )
-
-                results.append(formatted)
-
-                game_number += 1
+            game_number += 1
 
     except Exception as e:
 
@@ -110,32 +103,31 @@ html = f"""
 <style>
 
 body {{
-    background: #000;
-    color: #00ff66;
-    font-family: Consolas, Courier New, monospace;
-    padding: 20px;
-    line-height: 1.5;
+    background:#000;
+    color:#00ff66;
+    font-family:Consolas, monospace;
+    padding:20px;
+    line-height:1.5;
 }}
 
 h1 {{
-    color: #ffcc66;
-    margin-bottom: 25px;
+    color:#ffcc66;
+    margin-bottom:25px;
 }}
 
 .draw {{
-    padding: 2px 0;
-    border-bottom: 1px solid #111;
-    white-space: pre-wrap;
+    padding:2px 0;
+    border-bottom:1px solid #111;
 }}
 
 .draw:hover {{
-    background: #111;
+    background:#111;
 }}
 
 .footer {{
-    margin-top: 30px;
-    color: #666;
-    font-size: 12px;
+    margin-top:30px;
+    color:#666;
+    font-size:12px;
 }}
 
 </style>
